@@ -136,14 +136,29 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 		}
 	}
 
+	public boolean checkIfStringAvailable(List<String> allnames, String to_be_searched)
+	{
+		boolean resp = false;
+		for(String mstr : allnames)
+		{
+			if(mstr.equals(to_be_searched))
+			{
+				resp=true;
+				break;
+			}
+		}
+		
+		return resp;
+	}
+	
 	@Override
-	public List<String> getDailyReport_avg(String tablename, String pcolnames, String sdate, String edate, String timegap, List<String> tlist, String cumulativecolname,String mode_colname,String gasflow_colname) 
+	public List<String> getDailyReport_avg(String tablename, String pcolnames, String sdate, String edate, String timegap, List<String> tlist, String cumulativecolname,String mode_colname,String gasflow_colname, String pump_running_col_name) 
 	{
 		NumberFormat nf= NumberFormat.getInstance();
 		nf.setGroupingUsed(false);
         nf.setMaximumFractionDigits(2);
 		StringBuilder strb = new StringBuilder();
-		String[] tlist_arr = tlist.toArray(new String[0]);
+		//String[] tlist_arr = (String[]) tlist.toArray();
 		
 		for(String pcolstr : pcolnames.split(","))
 		{
@@ -154,7 +169,22 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 			}
 			else
 			{
-				strb.append("avg(cast("+pcolstr+" as decimal(10,2))) as "+pcolstr+",");	
+				if(tlist.size() > 0)
+				{
+					boolean resp = checkIfStringAvailable(tlist, pcolstr);
+					if(resp)
+					{
+						strb.append("max(cast("+pcolstr+" as decimal(10,2))) as "+pcolstr+",");	
+					}
+					else
+					{
+						strb.append("avg(cast("+pcolstr+" as decimal(10,2))) as "+pcolstr+",");	
+					}
+				}
+				else
+				{
+					strb.append("avg(cast("+pcolstr+" as decimal(10,2))) as "+pcolstr+",");	
+				}
 			}
 		}
 		//System.out.println("strb:"+strb.toString());
@@ -200,11 +230,11 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 								if(pcolname.equals(mode_colname))
 								{
 									mode_gas = true;
-									if(data_rec == 0)
+									if(data_rec <= 0.99)
 									{
 										dval_rec = "Manual";
 									}
-									if(data_rec == 1)
+									if(data_rec >= 1)
 									{
 										dval_rec = "Automatic";
 									}
@@ -212,13 +242,25 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 								if(pcolname.equals(gasflow_colname))
 								{
 									mode_gas = true;
-									if(data_rec == 0)
+									if(data_rec <= 0.99)
 									{
 										dval_rec = "Fixed Flow";
 									}
-									if(data_rec == 1)
+									if(data_rec >= 1)
 									{
 										dval_rec = "Real Flow";
+									}
+								}
+								if(pcolname.equals(pump_running_col_name))
+								{
+									mode_gas = true;
+									if(data_rec <= 0.99)
+									{
+										dval_rec = "A2";
+									}
+									if(data_rec >= 1)
+									{
+										dval_rec = "A1";
 									}
 								}
 								if(mode_gas)
@@ -298,12 +340,13 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 	
 	
 	@Override
-	public List<String> getMonthlyReport(String tablename,String pcolnames,String month,String year, String cumulativecolname,String mode_colname,String gasflow_colname)
+	public List<String> getMonthlyReport(String tablename,String pcolnames,String month,String year, String cumulativecolname,String mode_colname,String gasflow_colname, String pump_running_col_name,List<String> tlist)
 	{
 		StringBuilder strb = new StringBuilder();
 		NumberFormat nf= NumberFormat.getInstance();
 		nf.setGroupingUsed(false);
         nf.setMaximumFractionDigits(2);
+        //String[] tlist_arr = (String[]) tlist.toArray();
 		
 		for(String pcolstr : pcolnames.split(","))
 		{
@@ -315,7 +358,23 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 				}
 				else
 				{
-					strb.append("cast(avg(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");	
+					if(tlist.size() > 0)
+					{
+						boolean resp = checkIfStringAvailable(tlist, pcolstr);
+						if(resp)
+						{
+							strb.append("cast(max(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");
+						}
+						else
+						{
+							strb.append("cast(avg(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");
+						}
+					}
+					else
+					{
+						strb.append("cast(avg(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");
+					}
+					//strb.append("cast(avg(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");	
 				}	
 //			}
 		}
@@ -355,11 +414,11 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 						if(pcolname.equals(mode_colname))
 						{
 							mode_gas = true;
-							if(data_rec == 0)
+							if(data_rec <= 0.99)
 							{
 								dval_rec = "Manual";
 							}
-							if(data_rec == 1)
+							if(data_rec >= 1)
 							{
 								dval_rec = "Automatic";
 							}
@@ -367,13 +426,25 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 						if(pcolname.equals(gasflow_colname))
 						{
 							mode_gas = true;
-							if(data_rec == 0)
+							if(data_rec <= 0.99)
 							{
 								dval_rec = "Fixed Flow";
 							}
-							if(data_rec == 1)
+							if(data_rec >= 1)
 							{
 								dval_rec = "Real Flow";
+							}
+						}
+						if(pcolname.equals(pump_running_col_name))
+						{
+							mode_gas = true;
+							if(data_rec <= 0.99)
+							{
+								dval_rec = "A2";
+							}
+							if(data_rec >= 1)
+							{
+								dval_rec = "A1";
 							}
 						}
 						if(mode_gas)
@@ -421,23 +492,41 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 	}
 	
 	@Override
-	public List<String> getYearlyReport(String tablename,String pcolnames,String year, String cumulativecolname,String mode_colname,String gasflow_colname)
+	public List<String> getYearlyReport(String tablename,String pcolnames,String year, String cumulativecolname,String mode_colname,String gasflow_colname, String pump_running_col_name,List<String> tlist)
 	{
 		StringBuilder strb = new StringBuilder();
 		NumberFormat nf= NumberFormat.getInstance();
 		nf.setGroupingUsed(false);
         nf.setMaximumFractionDigits(2);
+        //String[] tlist_arr = (String[]) tlist.toArray();
 		for(String pcolstr : pcolnames.split(","))
 		{
 //			if(!pcolstr.contains("status"))
 //			{
 				if(pcolstr.equals(cumulativecolname))
 				{
+					//strb.append("cast(max(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");
 					strb.append("cast(max(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");
 				}
 				else
 				{
-					strb.append("cast(avg(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");	
+					if(tlist.size() > 0)
+					{
+						boolean resp = checkIfStringAvailable(tlist, pcolstr);
+						if(resp)
+						{
+							strb.append("cast(max(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");
+						}
+						else
+						{
+							strb.append("cast(avg(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");
+						}
+					}
+					else
+					{
+						strb.append("cast(avg(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");
+					}
+					//strb.append("cast(avg(cast("+pcolstr+" as decimal(10,2))) as decimal(10,2)) as "+pcolstr+",");	
 				}	
 //			}
 		}
@@ -477,11 +566,11 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 						if(pcolname.equals(mode_colname))
 						{
 							mode_gas = true;
-							if(data_rec == 0)
+							if(data_rec <= 0.99)
 							{
 								dval_rec = "Manual";
 							}
-							if(data_rec == 1)
+							if(data_rec >= 1)
 							{
 								dval_rec = "Automatic";
 							}
@@ -489,13 +578,25 @@ public class CustomQueriesRepositoryImpl implements CustomQueriesRepository
 						if(pcolname.equals(gasflow_colname))
 						{
 							mode_gas = true;
-							if(data_rec == 0)
+							if(data_rec <= 0.99)
 							{
 								dval_rec = "Fixed Flow";
 							}
-							if(data_rec == 1)
+							if(data_rec >= 1)
 							{
 								dval_rec = "Real Flow";
+							}
+						}
+						if(pcolname.equals(pump_running_col_name))
+						{
+							mode_gas = true;
+							if(data_rec <= 0.99)
+							{
+								dval_rec = "A2";
+							}
+							if(data_rec >= 1)
+							{
+								dval_rec = "A1";
 							}
 						}
 						if(mode_gas)

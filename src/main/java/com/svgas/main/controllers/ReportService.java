@@ -125,6 +125,8 @@ public class ReportService
 		String totalinjection_cumulative = "";
 		String mode_colname="";
 		String gasflow_colname = "";
+		String pump_running_colname="";
+		List max_value_list = new ArrayList<String>();
 		//StringBuilder pcolnames_csv_alarm = new StringBuilder();
 		List<String> paramids_str = Arrays.asList(rgs.getParameterids());
 		if(rgs.getReport_type().equals("normal"))
@@ -155,6 +157,19 @@ public class ReportService
 							{
 								gasflow_colname = pn.getParamcolname();
 							}
+							if(pn.getPcodeid().getPcodename().toString().equals("PUMP_RUNNING_TYPE"))
+							{
+								pump_running_colname = pn.getParamcolname();
+							}
+							if(pn.getPcodeid().getPcodename().toString().equals("PUMP_RUNNING_TYPE") || pn.getPcodeid().getPcodename().toString().equals("PUMP_1_COUNTER")
+									 || pn.getPcodeid().getPcodename().toString().equals("PUMP_2_COUNTER") || pn.getPcodeid().getPcodename().toString().equals("PUMP_3_COUNTER")
+									 || pn.getPcodeid().getPcodename().toString().equals("PUMP_4_COUNTER") || pn.getPcodeid().getPcodename().toString().equals("PUMP_5_COUNTER")
+									 || pn.getPcodeid().getPcodename().toString().equals("PUMP_6_COUNTER") || pn.getPcodeid().getPcodename().toString().equals("PUMP_7_COUNTER")
+									 || pn.getPcodeid().getPcodename().toString().equals("PUMP_8_COUNTER"))
+							{
+								max_value_list.add(pn.getParamcolname());
+							}
+							
 						}
 						else
 						{
@@ -171,6 +186,18 @@ public class ReportService
 							if(pn.getPcodeid().getPcodename().toString().equals("MODE"))
 							{
 								mode_colname = pn.getParamcolname();
+							}
+							if(pn.getPcodeid().getPcodename().toString().equals("PUMP_RUNNING_TYPE"))
+							{
+								pump_running_colname = pn.getParamcolname();
+							}
+							if(pn.getPcodeid().getPcodename().toString().equals("PUMP_RUNNING_TYPE") || pn.getPcodeid().getPcodename().toString().equals("PUMP_1_COUNTER")
+									 || pn.getPcodeid().getPcodename().toString().equals("PUMP_2_COUNTER") || pn.getPcodeid().getPcodename().toString().equals("PUMP_3_COUNTER")
+									 || pn.getPcodeid().getPcodename().toString().equals("PUMP_4_COUNTER") || pn.getPcodeid().getPcodename().toString().equals("PUMP_5_COUNTER")
+									 || pn.getPcodeid().getPcodename().toString().equals("PUMP_6_COUNTER") || pn.getPcodeid().getPcodename().toString().equals("PUMP_7_COUNTER")
+									 || pn.getPcodeid().getPcodename().toString().equals("PUMP_8_COUNTER"))
+							{
+								max_value_list.add(pn.getParamcolname());
 							}
 						}
 						
@@ -189,7 +216,7 @@ public class ReportService
 			if(rgs.getSub_report_type().equals("daily") || rgs.getSub_report_type().equals("hourly"))
 			{
 				System.out.println("daily");
-				lstr = cqr.getDailyReport_avg(ssd.getUniquename(), pcolnames_csv.toString(), rgs.getStart_date(), rgs.getEnd_date(), rgs.getTimegap(),new ArrayList<String>(),totalinjection_cumulative,mode_colname,gasflow_colname);
+				lstr = cqr.getDailyReport_avg(ssd.getUniquename(), pcolnames_csv.toString(), rgs.getStart_date(), rgs.getEnd_date(), rgs.getTimegap(),max_value_list,totalinjection_cumulative,mode_colname,gasflow_colname,pump_running_colname);
 				for(String s : lstr)
 				{
 					//System.out.println("ls:"+s);
@@ -198,12 +225,12 @@ public class ReportService
 			}
 			if(rgs.getSub_report_type().equals("monthly"))
 			{
-				lstr = cqr.getMonthlyReport(ssd.getUniquename(), pcolnames_csv.toString(), rgs.getMonth(), rgs.getYear(),totalinjection_cumulative,mode_colname,gasflow_colname);
+				lstr = cqr.getMonthlyReport(ssd.getUniquename(), pcolnames_csv.toString(), rgs.getMonth(), rgs.getYear(),totalinjection_cumulative,mode_colname,gasflow_colname,pump_running_colname,max_value_list);
 				rdetails = "Month: " + GetMonthName(rgs.getMonth()) + "  Year: " + rgs.getYear();
 			}
 			if(rgs.getSub_report_type().equals("yearly"))
 			{
-				lstr = cqr.getYearlyReport(ssd.getUniquename(), pcolnames_csv.toString(), rgs.getYear(),totalinjection_cumulative,mode_colname,gasflow_colname);
+				lstr = cqr.getYearlyReport(ssd.getUniquename(), pcolnames_csv.toString(), rgs.getYear(),totalinjection_cumulative,mode_colname,gasflow_colname,pump_running_colname,max_value_list);
 				rdetails = "Year: " + rgs.getYear();
 			}
 		}
